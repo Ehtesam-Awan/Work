@@ -1,160 +1,171 @@
 (function () {
   "use strict";
 
-  var TOTAL_POSTS = 40;
-  var gallery = document.querySelector(".gallery");
+  /* ==========================================================
+     GALLERY
+     Images are already directly inside HTML.
+     JavaScript does NOT create images, does NOT guess
+     extensions, and does NOT load the gallery dynamically.
+     ========================================================== */
 
-  /* ----------------------------------------------------------
-     Robust image loader — for each post, tries the numbered
-     filename against a list of common extensions in order
-     (jpg, jpeg, png, webp). The first one that loads successfully
-     is kept; if none exist, the post stays visible with its
-     neutral placeholder background instead of being hidden.
-     ---------------------------------------------------------- */
-  var IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+  const gallery = document.querySelector(".gallery");
 
-  function attachImageLoader(img, index) {
-    var extIndex = 0;
+  /* ==========================================================
+     IMAGE REVEAL
+     Purely cosmetic bookkeeping — adds a "loaded" class once
+     each image has actually loaded (or errored), for anyone
+     who wants to hook into it later. Visibility of the image
+     itself is NEVER dependent on this: the CSS already shows
+     images at opacity: 1 by default, with or without this class.
+     ========================================================== */
 
-    function tryNextExtension() {
-      if (extIndex >= IMAGE_EXTENSIONS.length) {
-        // No matching file found for this index — keep the tile
-        // visible with its neutral placeholder background.
-        img.removeEventListener("error", onError);
-        img.style.display = "none";
-        var parentPost = img.closest(".post");
-        if (parentPost) parentPost.classList.add("is-placeholder");
-        return;
+  function initImageReveal() {
+    if (!gallery) return;
+
+    const images = gallery.querySelectorAll(".post img");
+
+    images.forEach((img) => {
+      if (img.complete && img.naturalWidth > 0) {
+        img.classList.add("loaded");
+      } else {
+        img.addEventListener("load", () => {
+          img.classList.add("loaded");
+        });
+
+        img.addEventListener("error", () => {
+          console.warn("Image failed to load:", img.src);
+        });
       }
-      img.src = index + "." + IMAGE_EXTENSIONS[extIndex];
-      extIndex++;
-    }
-
-    function onError() {
-      tryNextExtension();
-    }
-
-    img.addEventListener("error", onError);
-    img.addEventListener("load", function () {
-      this.classList.add("loaded");
     });
-
-    tryNextExtension();
   }
 
-  /* ----------------------------------------------------------
-     Every post uses the same fixed-aspect-ratio tile (sizing is
-     handled entirely in CSS via .post), so the gallery is simply
-     generated as a loop from 1 through TOTAL_POSTS.
-     ---------------------------------------------------------- */
-  function buildGallery() {
-    var frag = document.createDocumentFragment();
+  /* ==========================================================
+     HOVER EFFECT
+     ========================================================== */
 
-    for (var i = 1; i <= TOTAL_POSTS; i++) {
-      var post = document.createElement("figure");
-      post.className = "post";
-      post.setAttribute("data-index", i);
-
-      var frame = document.createElement("div");
-      frame.className = "post-frame";
-
-      var img = document.createElement("img");
-      img.alt = "Design work " + i;
-      img.loading = "lazy";
-      img.decoding = "async";
-
-      attachImageLoader(img, i);
-
-      var caption = document.createElement("figcaption");
-      caption.className = "post-index";
-      caption.textContent = String(i).padStart(2, "0");
-
-      frame.appendChild(img);
-      frame.appendChild(caption);
-      post.appendChild(frame);
-      frag.appendChild(post);
-    }
-
-    gallery.appendChild(frag);
-  }
-
-  /* ----------------------------------------------------------
-     Hover choreography — desktop / fine-pointer only.
-     Adds .is-hovering to the gallery + .is-active to the
-     current post; CSS handles the smooth scale/blur/dim.
-     ---------------------------------------------------------- */
   function initHoverInteraction() {
-    var isFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (!gallery) return;
+
+    const isFinePointer = window.matchMedia(
+      "(hover: hover) and (pointer: fine)"
+    ).matches;
+
     if (!isFinePointer) return;
 
-    var activePost = null;
+    let activePost = null;
 
     gallery.addEventListener(
       "pointerover",
-      function (e) {
-        var post = e.target.closest(".post");
-        if (!post || post === activePost || post.classList.contains("is-hidden")) return;
+      (e) => {
+        const post = e.target.closest(".post");
+
+        if (
+          !post ||
+          post === activePost ||
+          post.classList.contains("is-hidden")
+        ) {
+          return;
+        }
+
         activePost = post;
+
         gallery.classList.add("is-hovering");
-        var prev = gallery.querySelector(".post.is-active");
-        if (prev) prev.classList.remove("is-active");
+
+        const previous = gallery.querySelector(".post.is-active");
+
+        if (previous) {
+          previous.classList.remove("is-active");
+        }
+
         post.classList.add("is-active");
       },
       true
     );
 
-    gallery.addEventListener("pointerleave", function () {
+    gallery.addEventListener("pointerleave", () => {
       gallery.classList.remove("is-hovering");
-      var prev = gallery.querySelector(".post.is-active");
-      if (prev) prev.classList.remove("is-active");
+
+      const previous = gallery.querySelector(".post.is-active");
+
+      if (previous) {
+        previous.classList.remove("is-active");
+      }
+
       activePost = null;
     });
   }
 
-  /* ----------------------------------------------------------
-     Subtle cursor follower — desktop only, lightweight rAF loop.
-     ---------------------------------------------------------- */
+  /* ==========================================================
+     CUSTOM CURSOR
+     ========================================================== */
+
   function initCursor() {
-    var isFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-    var dot = document.getElementById("cursorDot");
-    if (!isFinePointer || !dot) return;
+    const isFinePointer = window.matchMedia(
+      "(hover: hover) and (pointer: fine)"
+    ).matches;
 
-    var targetX = 0, targetY = 0, curX = 0, curY = 0;
-    var visible = false;
+    const dot = document.getElementById("cursorDot");
 
-    window.addEventListener("mousemove", function (e) {
+    if (!isFinePointer || !dot || !gallery) return;
+
+    let targetX = 0;
+    let targetY = 0;
+
+    let currentX = 0;
+    let currentY = 0;
+
+    let visible = false;
+
+    window.addEventListener("mousemove", (e) => {
       targetX = e.clientX;
       targetY = e.clientY;
+
       if (!visible) {
         dot.classList.add("is-visible");
         visible = true;
       }
     });
 
-    document.addEventListener("mouseleave", function () {
+    document.addEventListener("mouseleave", () => {
       dot.classList.remove("is-visible");
       visible = false;
     });
 
-    gallery.addEventListener("pointerover", function (e) {
-      if (e.target.closest(".post")) dot.classList.add("is-expanded");
+    gallery.addEventListener("pointerover", (e) => {
+      if (e.target.closest(".post")) {
+        dot.classList.add("is-expanded");
+      }
     });
-    gallery.addEventListener("pointerleave", function () {
+
+    gallery.addEventListener("pointerleave", () => {
       dot.classList.remove("is-expanded");
     });
 
-    function tick() {
-      curX += (targetX - curX) * 0.18;
-      curY += (targetY - curY) * 0.18;
-      dot.style.transform = "translate3d(" + curX + "px," + curY + "px,0)";
-      requestAnimationFrame(tick);
+    function animateCursor() {
+      currentX += (targetX - currentX) * 0.18;
+      currentY += (targetY - currentY) * 0.18;
+
+      dot.style.transform =
+        "translate3d(" +
+        currentX +
+        "px, " +
+        currentY +
+        "px, 0)";
+
+      requestAnimationFrame(animateCursor);
     }
-    requestAnimationFrame(tick);
+
+    requestAnimationFrame(animateCursor);
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
-    buildGallery();
+  /* ==========================================================
+     START
+     ========================================================== */
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initImageReveal();
     initHoverInteraction();
     initCursor();
   });
+
 })();
