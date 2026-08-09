@@ -1,7 +1,8 @@
 /* ============================================================
    ARCHIVE — Graphic Design Portfolio
    Token system
-   ============================================================ */
+============================================================ */
+
 :root {
   --paper: #faf9f7;
   --ink: #121210;
@@ -19,9 +20,14 @@
   --dur: 650ms;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-figure, figcaption { margin: 0; }
+figure,
+figcaption {
+  margin: 0;
+}
 
 html {
   background: var(--paper);
@@ -37,13 +43,20 @@ body {
   overflow-x: hidden;
 }
 
-a { color: inherit; text-decoration: none; }
+a {
+  color: inherit;
+  text-decoration: none;
+}
 
-img { max-width: 100%; display: block; }
+img {
+  max-width: 100%;
+  display: block;
+}
 
 /* ============================================================
    Header — minimal identity strip, no hero
-   ============================================================ */
+============================================================ */
+
 .site-header {
   display: flex;
   align-items: flex-end;
@@ -52,7 +65,11 @@ img { max-width: 100%; display: block; }
   border-bottom: 1px solid var(--line);
 }
 
-.brand { display: flex; flex-direction: column; gap: 4px; }
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
 .brand-mark {
   font-family: var(--font-display);
@@ -107,12 +124,15 @@ img { max-width: 100%; display: block; }
 
 /* ============================================================
    Gallery — uniform grid, every tile the same fixed size
-   ============================================================ */
+============================================================ */
+
 .gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: var(--gap);
-  padding: clamp(20px, 3vw, 40px) clamp(20px, 4vw, 56px) clamp(60px, 8vw, 110px);
+  padding: clamp(20px, 3vw, 40px)
+    clamp(20px, 4vw, 56px)
+    clamp(60px, 8vw, 110px);
 }
 
 .post {
@@ -128,63 +148,85 @@ img { max-width: 100%; display: block; }
   overflow: hidden;
   border-radius: 3px;
   background: #f0efeb;
+
   transform: translateZ(0) scale(1);
+
   transition:
     transform var(--dur) var(--ease-premium),
     filter var(--dur) var(--ease-premium),
     opacity var(--dur) var(--ease-premium),
     box-shadow var(--dur) var(--ease-premium);
+
   will-change: transform, filter;
 }
+
+/* ============================================================
+   IMAGE
+   Images are always visible by default — never hidden waiting
+   on JavaScript. If JS never runs, the image is still shown.
+   Only the hover zoom (on .post-frame, handled below) animates.
+============================================================ */
 
 .post img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  opacity: 0;
-  transform: scale(1.045);
-  filter: blur(6px);
-  transition:
-    opacity 900ms var(--ease-premium),
-    filter 900ms var(--ease-premium),
-    transform 1400ms var(--ease-premium);
-}
 
-.post img.loaded {
   opacity: 1;
-  filter: blur(0);
-  transform: scale(1);
+  display: block;
 }
 
 .post-index {
   position: absolute;
   left: 14px;
   bottom: 14px;
+
   font-family: var(--font-display);
   font-style: italic;
   font-weight: 420;
   font-size: 13px;
+
   color: #fff;
   letter-spacing: 0.02em;
+
   opacity: 0;
   transform: translateY(6px);
-  transition: opacity 450ms var(--ease-premium), transform 450ms var(--ease-premium);
-  text-shadow: 0 1px 8px rgba(0,0,0,0.35);
+
+  transition:
+    opacity 450ms var(--ease-premium),
+    transform 450ms var(--ease-premium);
+
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
 }
 
 .post-frame::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.32), rgba(0,0,0,0) 45%);
+
+  background:
+    linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.32),
+      rgba(0, 0, 0, 0) 45%
+    );
+
   opacity: 0;
+
   transition: opacity 450ms var(--ease-premium);
+
   pointer-events: none;
 }
 
-/* Hover choreography — desktop / fine pointer only */
+/* ============================================================
+   Hover choreography — desktop / fine pointer only
+   (unchanged — this is the effect on .post-frame, not the img,
+   so it is completely independent of image load state)
+============================================================ */
+
 @media (hover: hover) and (pointer: fine) {
+
   .gallery.is-hovering .post-frame {
     filter: blur(3px);
     opacity: 0.5;
@@ -199,7 +241,9 @@ img { max-width: 100%; display: block; }
     filter: blur(0);
     opacity: 1;
     transform: scale(1.065);
-    box-shadow: 0 30px 70px -20px rgba(15, 15, 13, 0.35);
+
+    box-shadow:
+      0 30px 70px -20px rgba(15, 15, 13, 0.35);
   }
 
   .gallery.is-hovering .post.is-active .post-frame::before {
@@ -212,87 +256,146 @@ img { max-width: 100%; display: block; }
   }
 }
 
-.post.is-hidden { display: none; }
+.post.is-hidden {
+  display: none;
+}
 
 /* ============================================================
    Cursor follower — subtle, desktop only
-   ============================================================ */
+============================================================ */
+
 .cursor-dot {
   position: fixed;
+
   top: 0;
   left: 0;
+
   width: 10px;
   height: 10px;
+
   margin: -5px 0 0 -5px;
+
   border-radius: 50%;
+
   background: var(--accent);
+
   pointer-events: none;
+
   z-index: 999;
+
   opacity: 0;
+
   mix-blend-mode: normal;
-  transition: opacity 300ms var(--ease-premium), width 350ms var(--ease-premium), height 350ms var(--ease-premium), margin 350ms var(--ease-premium);
+
+  transition:
+    opacity 300ms var(--ease-premium),
+    width 350ms var(--ease-premium),
+    height 350ms var(--ease-premium),
+    margin 350ms var(--ease-premium);
 }
 
-.cursor-dot.is-visible { opacity: 0.9; }
+.cursor-dot.is-visible {
+  opacity: 0.9;
+}
 
 .cursor-dot.is-expanded {
   width: 34px;
   height: 34px;
+
   margin: -17px 0 0 -17px;
+
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.9);
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
+
+  border: 1px solid rgba(255, 255, 255, 0.9);
+
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.15);
+
   opacity: 1;
 }
 
 @media (hover: none), (pointer: coarse) {
-  .cursor-dot { display: none; }
+  .cursor-dot {
+    display: none;
+  }
 }
 
 /* ============================================================
    Responsive
-   ============================================================ */
+============================================================ */
+
 @media (max-width: 900px) {
+
   .gallery {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns:
+      repeat(auto-fill, minmax(150px, 1fr));
+
     gap: 10px;
   }
 }
 
 @media (max-width: 640px) {
+
   .site-header {
     padding: 22px 18px 16px;
     align-items: flex-start;
   }
-  .brand-mark { font-size: 19px; }
-  .site-nav { gap: 16px; }
-  .site-nav a { font-size: 12px; }
+
+  .brand-mark {
+    font-size: 19px;
+  }
+
+  .site-nav {
+    gap: 16px;
+  }
+
+  .site-nav a {
+    font-size: 12px;
+  }
 
   .gallery {
     grid-template-columns: repeat(2, 1fr);
+
     gap: 8px;
-    padding: 16px 12px 70px;
+
+    padding:
+      16px
+      12px
+      70px;
   }
 
-  .post-frame { border-radius: 2px; }
+  .post-frame {
+    border-radius: 2px;
+  }
 
   .post-index {
     opacity: 1;
     transform: translateY(0);
+
     font-size: 11px;
+
     left: 10px;
     bottom: 10px;
   }
 
-  .post-frame::before { opacity: 0.9; height: 40%; top: auto; }
+  .post-frame::before {
+    opacity: 0.9;
+
+    height: 40%;
+    top: auto;
+  }
 }
 
 @media (min-width: 641px) and (max-width: 900px) {
-  .post-index { opacity: 1; transform: translateY(0); font-size: 12px; }
-  .post-frame::before { opacity: 0.75; }
-}
 
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  * { transition-duration: 1ms !important; animation-duration: 1ms !important; scroll-behavior: auto !important; }
+  .post-index {
+    opacity: 1;
+    transform: translateY(0);
+
+    font-size: 12px;
+  }
+
+  .post-frame::before {
+    opacity: 0.75;
+  }
 }
